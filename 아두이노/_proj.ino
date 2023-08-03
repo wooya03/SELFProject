@@ -25,6 +25,10 @@ void setup() {
   Wire.begin();                   //i2c init
   mpu.begin();                //mpu init
   mpu.calcGyroOffsets(false);  //mpu setting
+
+  Serial.println("x,y,z");
+  //delay(2000);  //just wait
+
 }
 
 #define fs(f) (String(f).c_str())
@@ -69,7 +73,7 @@ void MakeJson() {
   //const char* format = "{\"acc_x\":%s,\"acc_y\":%s,\"acc_z\":%s,\"gy_x\":%s,\"gy_y\":%s,\"gy_z\":%s,\"an_x\":%s,\"an_y\":%s,\"an_z\":%s}";   // \"acc_y\":%s
   //sprintf(g_buffer, format, fs(acc_x), fs(acc_y), fs(acc_z), fs(gyro_x), fs(gyro_y), fs(gyro_z), fs(angle_x), fs(angle_y), fs(angle_z));
 
-  //더 최적화 아마 이거면 충분할듯
+  //더 최적화
   const char* format = "{\"acc_x\":%s,\"acc_y\":%s,\"acc_z\":%s,\"an_x\":%s,\"an_y\":%s,\"an_z\":%s}";   // \"acc_y\":%s
   sprintf(g_buffer, format, fs(acc_x), fs(acc_y), fs(acc_z), fs(angle_x), fs(angle_y), fs(angle_z));
 }
@@ -129,7 +133,7 @@ void loop() {
   if(1){
     SendData();
     
-    //debug();
+    debug();
 
 
     timer = millis();
