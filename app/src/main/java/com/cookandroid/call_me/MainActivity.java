@@ -1,10 +1,14 @@
 package com.cookandroid.call_me;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,9 +16,15 @@ import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.cookandroid.call_me.utils.DBManager;
+
 public class MainActivity extends Activity implements View.OnClickListener {
     // 전화번호 입력 Text
     private EditText mEditNumber;
+
+    // SQLite 관련 변수 선언
+    private DBManager dbManager;
+    private SQLiteDatabase sqLiteDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +34,39 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Button mDialogCall;
         // 권한 요청을 식별하기 위해 쓰이는 변수
         final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 1000;
+
+        // 초기화 및 조회를 위해 DB 가져오기
+        dbManager = new DBManager(this);
+        sqLiteDatabase = dbManager.getReadableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("name", "John");
+        values.put("tel", "01012341234");
+
+        sqLiteDatabase.insert("user", null, values);
+
+        // 조회
+        Cursor cursor = sqLiteDatabase.query(
+                "user",
+                new String[] {"name", "tel"},
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        // Process the results from the cursor
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                int tel = cursor.getInt(cursor.getColumnIndexOrThrow("tel"));
+                Log.i("db_select", name + "\t" + tel);
+            }
+            cursor.close();
+        }
+
+        sqLiteDatabase.close();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
