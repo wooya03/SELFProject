@@ -1,5 +1,6 @@
 package com.cookandroid.call_me.utils;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -7,11 +8,15 @@ import android.database.sqlite.SQLiteOpenHelper;
 import androidx.annotation.Nullable;
 
 public class DBManager extends SQLiteOpenHelper {
+    // DB name 임시 변수 (이름1 .. 이름2 .... 이름6)
+    static private int nameCnt;
     private static final String DATABASE_NAME = "self.db";
     private static final int DATABASE_VERSION = 1;
+    private SQLiteDatabase db;
 
     public DBManager(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        db = this.getWritableDatabase();
     }
 
     @Override
@@ -35,5 +40,27 @@ public class DBManager extends SQLiteOpenHelper {
             sqLiteDatabase.execSQL("DROP TABLE IF EXISTS user");
             onCreate(sqLiteDatabase);
         }
+    }
+
+    public long insertUserData(String tel) {
+        ContentValues values = new ContentValues();
+        values.put("name", "name" + (++nameCnt));
+        values.put("tel", tel);
+
+        long newRowId = db.insert("user", null, values);
+
+        return newRowId;
+    }
+
+    public void deleteAllUserData() {
+        db.delete("user", null, null);
+    }
+
+    public SQLiteDatabase getDB(){
+        return db;
+    }
+
+    public void close(){
+        db.close();
     }
 }
