@@ -2,10 +2,15 @@ package com.cookandroid.call_me.utils;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class DBManager extends SQLiteOpenHelper {
     // DB name 임시 변수 (이름1 .. 이름2 .... 이름6)
@@ -50,6 +55,26 @@ public class DBManager extends SQLiteOpenHelper {
         long newRowId = db.insert("user", null, values);
 
         return newRowId;
+    }
+
+    public List<List<String>> selectAll(){
+        Cursor cursor = db.query("user", new String[] {"name", "tel"}, null, null, null, null, null);
+
+        List<List<String>> data = new ArrayList<>();
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                List<String> tmp = new ArrayList<>();
+
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                String tel = cursor.getString(cursor.getColumnIndexOrThrow("tel"));
+
+                tmp.add(name);
+                tmp.add(tel);
+                data.add(tmp);
+            }
+            cursor.close();
+        }
+        return data;
     }
 
     public void deleteAllUserData() {

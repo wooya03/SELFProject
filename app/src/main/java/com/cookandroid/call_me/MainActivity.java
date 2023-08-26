@@ -20,7 +20,9 @@ import androidx.core.content.ContextCompat;
 
 import com.cookandroid.call_me.utils.DBManager;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+import java.util.List;
+
+public class MainActivity extends Activity{
     // SQLite 변수 선언
     private DBManager dbManager;
     // 전화 번호 추가
@@ -30,7 +32,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // 전화 바로 걸기 버튼
+        // 전화번호 추가 버튼 및 걸기 버튼
+        Button mAdd;
         Button mCall;
         // 권한 요청을 식별 하기 위해 쓰이는 변수
         final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 1000;
@@ -43,9 +46,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
 
         telTextView = findViewById(R.id.telTextView);
+        mAdd = findViewById(R.id.btnAdd);
         mCall = findViewById(R.id.btnCall);
         mEditNumber = findViewById(R.id.edtNumber);
-        mCall.setOnClickListener(MainActivity.this);
+
+        // 전화번호 추가 이벤트 리스너
+        mAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                add();
+            }
+        });
+
+        // 전화 걸기 이벤트 리스너
+        mCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                call(view);
+            }
+        });
 
         // 자동 하이폰 추가
         mEditNumber.addTextChangedListener(new PhoneNumberFormattingTextWatcher());
@@ -69,18 +88,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    @Override
-    public void onClick(View v) {
-//        // 입력한 번호를 대입할 변수
-//        String mNum;
-//        // 입력한 번호 문자열로 가져오기
-//        mNum = mEditNumber.getText().toString();
-//        // 앞에는 tel: 을 붙여야함
-//        String tel = "tel:" + mNum;
-//        // 버튼이라는 이벤트가 전화걸기 버튼이었을 때
-//        if (v.getId() == R.id.btnCall) {
-//            startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
-//        }
+    public void add() {
         String mNum = mEditNumber.getText().toString();
         if(mNum.length() < 13){
             Toast.makeText(this,"전화 번호 형식이 올바르지 않습니다.",Toast.LENGTH_LONG).show();
@@ -92,26 +100,38 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
+    public void call(View v){
+        // 입력한 번호를 대입할 변수
+        String mNum;
+
+        // 입력한 번호 문자열로 가져오기
+        List<List<String>> data = dbManager.selectAll();
+
+        if(data.isEmpty()){
+            Toast.makeText(this,"등록된 전화번호가 없습니다.",Toast.LENGTH_LONG).show();
+        }else{
+            mNum = data.get(0).get(1);
+            // 앞에는 tel: 을 붙여야함
+            String tel = "tel:" + mNum;
+            // 버튼이라는 이벤트가 전화걸기 버튼이었을 때
+            if (v.getId() == R.id.btnCall) {
+                Toast.makeText(this,mNum + " 로 전화를 겁니다.",Toast.LENGTH_LONG).show();
+
+                startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+            }
+        }
+    }
+
     // DB 데이터를 UI에 그려 주는 함수
     public void updateUiFromDatabase(){
-        SQLiteDatabase sqLiteDatabase = dbManager.getDB();
+        // 간단하게 StringBuilder 를 사용해서 합쳐진 문자열을 뿌려줌
+        StringBuilder viewData = new StringBuilder();
+        List<List<String>> data = dbManager.selectAll();
 
-        // 조회
-        Cursor cursor = sqLiteDatabase.query("user", new String[] {"name", "tel"}, null, null, null, null, null);
-
-        // StringBuilder 를 사용해서 합쳐진 문자열을 뿌려줌
-        StringBuilder data = new StringBuilder();
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-                String tel = cursor.getString(cursor.getColumnIndexOrThrow("tel"));
-
-                data.append("name: ").append(name).append("    tel: ").append(tel).append("\n");
-                System.out.println(data);
-            }
-            cursor.close();
+        for(int i = 0; i < data.size(); i++){
+            viewData.append(data.get(i)).append("\n");
         }
 
-        telTextView.setText(data.toString());
+        telTextView.setText(viewData.toString());
     }
 }
