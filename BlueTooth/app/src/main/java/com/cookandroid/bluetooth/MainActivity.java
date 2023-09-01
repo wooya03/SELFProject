@@ -34,10 +34,11 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
-    BluetoothAdapter btAdapter;
-    private final static int REQUEST_ENABLE_BT = 1;
+    /*사용 변수들*/
+    BluetoothAdapter btAdapter; // 블루투스를 사용하기 위한 변수
+    private final static int REQUEST_ENABLE_BT = 1; // 사용자에게 블루투스 권한을 요청하기 위한 변수
 
-    TextView textStatus;
+    TextView textStatus; // 연결 상태 변수
     Button btnPaired, btnSearch, btnSend, receiveButton;
     ListView listView;
 
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> btArrayAdapter;
     ArrayList<String> deviceAddressArray;
 
-    BluetoothSocket btSocket;
+    BluetoothSocket btSocket; // 아두이노와 데이터를 주고 받을 수 있는 소켓변수
     ConnectedThread connectedThread;
 
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // 블루투스 SPP 프로파일 UUID
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "ArduinoSensorData";
 
-    // Create a BroadcastReceiver for ACTION_FOUND.
+    // 블루투스 기기 검색 결과 수신
     private final BroadcastReceiver discoveryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
+   // 블루투스 소켓 생성
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         BluetoothSocket socket = null;
         try {
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Get permission
+        // 권한 가져오기
         String[] permissionList = {
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
         ActivityCompat.requestPermissions(this, permissionList, 1);
 
-        // Enable bluetooth
+        // 블루투스를 지원하지 않을 경우
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (btAdapter == null) {
             // Device does not support Bluetooth
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // 사용자가 블루투스 기능이 비활성화 되어있을때 권한 요청
         if (!btAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -156,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Handle button click event to search for paired devices
+    // 이전에 연결한 블루투스 디바이스 목록을 보여줌
     public void onClickButtonPaired(View view) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED) {
@@ -172,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    // 이 메서드는 페어링된 Bluetooth 기기들을 검색하고 해당 기기들의 이름을 목록에 추가하고, 각 기기의 MAC 주소를 다른 리스트에 추가하는 역할
     private void executePairedDeviceSearch() {
         btArrayAdapter.clear();
         if (deviceAddressArray != null && !deviceAddressArray.isEmpty()) {
@@ -297,6 +301,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // 아두이노로 부터 데이터 받기
     private void receiveDataFromArduino() {
         if (connectedThread != null) {
             // If the connection is already established, start receiving data
@@ -337,6 +342,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // A라는 메시지를 아두이노에게 보내보기
     public void onClickButtonSend(View view){
         if(connectedThread!=null){ connectedThread.write("a"); }
     }
