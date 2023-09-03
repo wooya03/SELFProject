@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-   // 블루투스 소켓 생성
+    // 블루투스 소켓 생성
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         BluetoothSocket socket = null;
         try {
@@ -153,9 +153,15 @@ public class MainActivity extends AppCompatActivity {
         receiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                receiveDataFromArduino();
+                if (connectedThread != null) {
+                    connectedThread.startReceiving();
+                } else {
+                    receiveDataFromArduino();
+                }
             }
         });
+
+
     }
 
     // 이전에 연결한 블루투스 디바이스 목록을 보여줌
@@ -302,6 +308,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 아두이노로 부터 데이터 받기
+
+
     private void receiveDataFromArduino() {
         if (connectedThread != null) {
             // If the connection is already established, start receiving data

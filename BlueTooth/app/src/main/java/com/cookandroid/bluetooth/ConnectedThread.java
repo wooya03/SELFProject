@@ -16,6 +16,8 @@ public class ConnectedThread extends Thread {
     private final InputStream mmInStream; // 블루투스 디바이스로 부터 데이터 읽어오기 위한 변수
     private final OutputStream mmOutStream; // 블루투스 디바이스로 부터 데이터 받아오기 위한 변수
 
+    private volatile boolean receivingData = false;
+
     private static final String TAG = "ArduinoSensorData"; // TAG 변수를 정의
 
     public ConnectedThread(BluetoothSocket socket) {
@@ -35,15 +37,11 @@ public class ConnectedThread extends Thread {
         mmOutStream = tmpOut;
     }
 
-    private volatile boolean receivingData = false;
 
     public void startReceiving() {
         receivingData = true;
     }
 
-    public void stopReceiving() {
-        receivingData = false;
-    }
 
     @Override
     public void run() {
@@ -52,7 +50,7 @@ public class ConnectedThread extends Thread {
         int bytecount; // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs
-        while (true) {
+        while (receivingData) {
             try {
                 // Read from the InputStream
                 bytecount = mmInStream.available();
@@ -83,6 +81,7 @@ public class ConnectedThread extends Thread {
                 break;
             }
         }
+
     }
 
     // 데이터를 페이링된 장치로 보내는 메서드
