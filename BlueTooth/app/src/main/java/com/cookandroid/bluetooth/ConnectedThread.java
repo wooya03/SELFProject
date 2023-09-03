@@ -13,8 +13,10 @@ import java.io.OutputStream;
 
 public class ConnectedThread extends Thread {
     private final BluetoothSocket mmSocket;
-    private final InputStream mmInStream;
-    private final OutputStream mmOutStream;
+    private final InputStream mmInStream; // 블루투스 디바이스로 부터 데이터 읽어오기 위한 변수
+    private final OutputStream mmOutStream; // 블루투스 디바이스로 부터 데이터 받아오기 위한 변수
+
+    private volatile boolean receivingData = false;
 
     private static final String TAG = "ArduinoSensorData"; // TAG 변수를 정의
 
@@ -35,49 +37,43 @@ public class ConnectedThread extends Thread {
         mmOutStream = tmpOut;
     }
 
-    private volatile boolean receivingData = false;
 
     public void startReceiving() {
         receivingData = true;
     }
 
-    public void stopReceiving() {
-        receivingData = false;
-    }
 
     @Override
     public void run() {
-        byte[] buffer = new byte[1024];  // buffer store for the stream
-        int bytes; // bytes returned from read()
-        // Keep listening to the InputStream until an exception occurs
-        while (true) {
-            try {
-                // Read from the InputStream
-                bytes = mmInStream.available();
-                if (bytes != 0) {
-                    buffer = new byte[1024];
-                    SystemClock.sleep(100); //pause and wait for rest of data. Adjust this depending on your sending speed.
-                    bytes = mmInStream.available(); // how many bytes are ready to be read?
-                    bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
 
-                break;
-            }
-        }
+        byte[] buffer = new byte[1024];  // buffer store for the stream
+        int bytecount; // bytes returned from read()
+
+        // Keep listening to the InputStream until an exception occurs
         while (receivingData) {
             try {
                 // Read from the InputStream
-                bytes = mmInStream.available();
-                if (bytes != 0) {
-                    buffer = new byte[1024];
-                    SystemClock.sleep(100); // pause and wait for rest of data. Adjust this depending on your sending speed.
-                    bytes = mmInStream.available(); // how many bytes are ready to be read?
-                    bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
+                bytecount = mmInStream.available();
+                if (bytecount != 0) {
+                    //SystemClock.sleep(100); // pause and wait for rest of data. Adjust this depending on your sending speed.
+                    bytecount = mmInStream.available(); // how many bytes are ready to be read?
+                    bytecount = mmInStream.read(buffer, 0, bytecount); // record how many bytes we actually read
+                    buffer[bytecount] = '\0';
+
+
+
+
+                    //String str = new String(bytes, java.nio.charset.StandardCharsets.US_ASCII);
+                    //Log.d(TAG, str);
+                    if(buffer[0] == '{'){
+
+                    }
+                    Log.d(TAG, "");
 
                     // Parse JSON data and process the sensor value
-                    String jsonData = new String(buffer, 0, bytes);
+                    //String jsonData = new String(buffer, 0, bytecount+1);
+                    String jsonData = new String(buffer, 0, bytecount);
+                    Log.d(TAG, jsonData);
                     processData(jsonData);
                 }
             } catch (IOException e) {
@@ -85,9 +81,10 @@ public class ConnectedThread extends Thread {
                 break;
             }
         }
+
     }
 
-    /* Call this from the main activity to send data to the remote device */
+    // 데이터를 페이링된 장치로 보내는 메서드
     public void write(String input) {
         byte[] bytes = input.getBytes();           //converts entered String into bytes
         try {
@@ -107,7 +104,7 @@ public class ConnectedThread extends Thread {
     private void processData(String jsonData) {
         try {
             JSONObject jsonObject = new JSONObject(jsonData);
-            int sensorValue = jsonObject.getInt("sensorValue");
+            double sensorValue = jsonObject.getDouble("acc_x");
 
             // 센서 값을 사용하여 필요한 작업 수행
             // 예시로 로그를 출력합니다.
